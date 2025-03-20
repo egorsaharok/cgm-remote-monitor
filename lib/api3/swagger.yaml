@@ -2,7 +2,7 @@ openapi: 3.0.0
 servers:
   - url: '/api/v3'
 info:
-  version: "3.0.2"
+  version: 3.0.4
   title: Nightscout API
   contact:
     name: NS development discussion channel
@@ -20,11 +20,6 @@ info:
     <pre>API3_SECURITY_ENABLE=true</pre>
     You can turn the whole security mechanism off, e.g. for debugging or development purposes,
     but this should never be set to false in production.
-
-
-    - Number of minutes of acceptable time skew between client's and server's clock (optional, default = 5)
-    <pre>API3_TIME_SKEW_TOLERANCE=5</pre>
-    This security parameter is used for preventing anti-replay attacks, specifically when checking the time from `Date` header.
 
 
     - Maximum limit count of documents retrieved from single query
@@ -80,10 +75,6 @@ paths:
         schema:
           $ref: '#/components/schemas/paramCollection'
 
-      - $ref: '#/components/parameters/dateHeader'
-      - $ref: '#/components/parameters/nowParam'
-      - $ref: '#/components/parameters/tokenParam'
-
     ######################################################################################
     get:
       tags:
@@ -120,7 +111,6 @@ paths:
         - $ref: '#/components/parameters/fieldsParam'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -165,7 +155,6 @@ paths:
               $ref: '#/components/schemas/DocumentToPost'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -203,10 +192,6 @@ paths:
         schema:
           $ref: '#/components/schemas/paramIdentifier'
 
-      - $ref: '#/components/parameters/dateHeader'
-      - $ref: '#/components/parameters/nowParam'
-      - $ref: '#/components/parameters/tokenParam'
-
     ######################################################################################
     get:
       tags:
@@ -230,7 +215,6 @@ paths:
         - $ref: '#/components/parameters/fieldsParam'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -285,7 +269,6 @@ paths:
               $ref: '#/components/schemas/DocumentToPost'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -350,7 +333,6 @@ paths:
               $ref: '#/components/schemas/DocumentToPost'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -391,7 +373,6 @@ paths:
         - $ref: '#/components/parameters/permanentParam'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -416,10 +397,6 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/paramCollection'
-
-      - $ref: '#/components/parameters/dateHeader'
-      - $ref: '#/components/parameters/nowParam'
-      - $ref: '#/components/parameters/tokenParam'
 
     get:
       tags:
@@ -450,7 +427,6 @@ paths:
         - $ref: '#/components/parameters/fieldsParam'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -486,10 +462,6 @@ paths:
           type: integer
           format: int64
 
-      - $ref: '#/components/parameters/dateHeader'
-      - $ref: '#/components/parameters/nowParam'
-      - $ref: '#/components/parameters/tokenParam'
-
     get:
       tags:
         - generic
@@ -510,7 +482,6 @@ paths:
         - $ref: '#/components/parameters/fieldsParam'
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -556,7 +527,6 @@ paths:
         This operation requires authorization in contrast with VERSION operation.
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -573,11 +543,6 @@ paths:
 
   ######################################################################################
   /lastModified:
-    parameters:
-      - $ref: '#/components/parameters/dateHeader'
-      - $ref: '#/components/parameters/nowParam'
-      - $ref: '#/components/parameters/tokenParam'
-
     get:
       tags:
         - other
@@ -592,7 +557,6 @@ paths:
         This operation requires `read` permission for the API and the collections (e.g. `api:treatments:read`). For each collection the permission is checked separately, you will get timestamps only for those collections that you have access to.
 
       security:
-        - accessToken: []
         - jwtoken: []
 
       responses:
@@ -607,57 +571,6 @@ paths:
 components:
 
   parameters:
-
-    dateHeader:
-      in: header
-      name: Date
-      schema:
-        type: string
-      required: false
-      description:
-        Timestamp (defined by client's clock) when the HTTP request was constructed on client.
-        This mandatory header serves as an anti-replay precaution. After a period of time (specified by `API3_TIME_SKEW_TOLERANCE`) the message won't be valid any more and it will be denied with HTTP 401 Unauthorized code.
-        This can be set alternatively in `now` query parameter.
-
-        Example&#58;
-
-
-        <pre>Date&#58; Wed, 17 Oct 2018 05&#58;13&#58;00 GMT</pre>
-
-
-    nowParam:
-      in: query
-      name: now
-      schema:
-        type: integer
-        format: int64
-      required: false
-      description:
-        Timestamp (defined by client's clock) when the HTTP request was constructed on client.
-        This mandatory parameter serves as an anti-replay precaution. After a period of time (specified by `API3_TIME_SKEW_TOLERANCE`) the message won't be valid any more and it will be denied with HTTP 401 Unauthorized code.
-        This can be set alternatively in `Date` header.
-
-
-        Example&#58;
-
-
-        <pre>now=1525383610088</pre>
-
-
-    tokenParam:
-      in: query
-      name: token
-      schema:
-        type: string
-      required: false
-      description:
-        An alternative way of authorization - passing accessToken in a query parameter.
-
-
-        Example&#58;
-
-
-        <pre>token=testadmin-bf2591231bd2c042</pre>
 
 
     limitParam:
@@ -937,7 +850,7 @@ components:
                 example: 400
 
     401Unauthorized:
-      description: The request was not successfully authenticated using access token or JWT, or the request has missing `Date` header or it contains an expired timestamp, so that the request cannot continue due to the security policy.
+      description: The request was not successfully authenticated using JWT, so that the request cannot continue due to the security policy.
       content:
         application/json:
           schema:
@@ -1276,7 +1189,7 @@ components:
         subject:
           type: string
           description:
-            Name of the security subject (within Nightscout scope) which has created the document. This field is automatically set by the server from the passed token or JWT.
+            Name of the security subject (within Nightscout scope) which has created the document. This field is automatically set by the server from the passed JWT.
 
 
             Note&#58; this field is immutable by the client (it cannot be updated or patched)
@@ -1799,16 +1712,6 @@ components:
 
   ######################################################################################
   securitySchemes:
-
-    accessToken:
-      type: apiKey
-      name: token
-      in: query
-      description: >-
-        Add token as query item in the URL or as HTTP header. You can manage access token in
-        `/admin`.
-
-        Each operation requires a specific permission that has to be granted (via security role) to the security subject, which was authenticated by `token` parameter/header or `JWT`. E.g. for creating new `devicestatus` document via API you need `api:devicestatus:create` permission.
 
     jwtoken:
       type: http
